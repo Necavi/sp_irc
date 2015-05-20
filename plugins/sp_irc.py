@@ -10,7 +10,7 @@ from filters.players import PlayerIter
 from messages import SayText2
 from paths import CFG_PATH
 
-from ..colourizer import colourize
+from ..sp_utils.colourizer import colourize
 from ..plugin_template import IRCPlugin
 
 

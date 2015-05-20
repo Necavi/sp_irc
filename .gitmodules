@@ -1,0 +1,3 @@
+[submodule "sp_utils"]
+	path = sp_utils
+	url = git@github.com:necavi/sp_utils.git
