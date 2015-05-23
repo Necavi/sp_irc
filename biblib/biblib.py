@@ -1,10 +1,10 @@
-import threading
 import socket
 import time
 import traceback
 from datetime import datetime
 from collections import deque
 
+from . import threading
 from . import event
 
 
@@ -25,7 +25,7 @@ class IRCEvents:
 
 
 class Bot:
-    def __init__(self, address, nick, mode=0, realname=None, usessl=None):
+    def __init__(self, address, nick, mode=0, realname=None, usessl=False, echo=True):
         self.recv_thread = threading.Thread(target=self.receive_manager, name="receive-thread")
         self.send_thread = threading.Thread(target=self.send_manager, name="send-thread")
         self.address = address
@@ -36,7 +36,8 @@ class Bot:
         self.messagequeue = deque()
         self.tsocket = socket.socket()
         self.enabled = False
-        if usessl is not None:
+        self.echo = echo
+        if usessl:
             try:
                 import ssl
             except ImportError:
@@ -53,6 +54,9 @@ class Bot:
         self.send("USER {} {} * :{}".format(self.nick, self.mode, self.realname))
         self.recv_thread.start()
         self.send_thread.start()
+
+    def disconnect(self, message=None):
+        self.send("QUIT{}".format((" :" + message) if message is not None else ""))
 
     def join(self, channel):
         message = "JOIN {}".format(channel)
@@ -93,9 +97,9 @@ class Bot:
     def send(self, message):
         self.messagequeue.appendleft(message)
 
-    @staticmethod
-    def print(message):
-        print("[{}] {}".format(datetime.now().replace(microsecond=0), message))
+    def print(self, message):
+        if self.echo:
+            print("[{}] {}".format(datetime.now().replace(microsecond=0), message))
 
     def send_manager(self):
         while self.enabled:
@@ -138,9 +142,8 @@ class Bot:
                 self.events.CTCP(command[2], command[0], command[3].strip("\x01"), " ".join(command[4:]).rstrip("\x01"))
             else:
                 message = "{}".format(command[3], " ".join(command[3:]))
-                self.events.PrivMsg(command[0], message)
                 if command[2].startswith("#"):
-                    self.events.ChanMsg(command[2], command[2], message)
+                    self.events.ChanMsg(command[0], command[2], message)
                 elif command[2] == self.nick:
                     self.events.PrivMsg(command[2], message)
         elif command[1].isnumeric():

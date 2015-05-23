@@ -11,6 +11,7 @@ from messages import SayText2
 from paths import CFG_PATH
 
 from ..sp_utils.colourizer import colourize
+from ..sp_utils.utils import message_client
 from ..plugin_template import IRCPlugin
 
 
@@ -60,8 +61,8 @@ class SourcePython(IRCPlugin):
 
     def irc_message(self, source, channel, message):
         for index in PlayerIter(is_filters="all", return_types="index"):
-            SayText2(message=colourize(self.config["ingame_format"].format(source=source.split("!")[0], channel=channel,
-                                                                           message=message))).send(index)
+            message_client(index, colourize(self.config["ingame_format"].format(source=source.split("!")[0],
+                                                                                channel=channel, message=message)))
 
     def connected(self):
         self.bot.join(self.config["channel"])
